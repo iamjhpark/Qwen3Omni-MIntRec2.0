@@ -16,8 +16,18 @@ from dataset import load_video_frames
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = (
+SYSTEM_PROMPT_MULTIMODAL = (
     "You are a multimodal intent recognition system. "
+    "Classify the intent of the target utterance into exactly one of these 30 categories:\n"
+    "Acknowledge, Advise, Agree, Apologise, Arrange, Ask for help, Asking for opinions, "
+    "Care, Comfort, Complain, Confirm, Criticize, Doubt, Emphasize, Explain, "
+    "Flaunt, Greet, Inform, Introduce, Invite, Joke, Leave, Oppose, Plan, Praise, "
+    "Prevent, Refuse, Taunt, Thank, Warn.\n"
+    "Respond with only the intent label, nothing else."
+)
+
+SYSTEM_PROMPT_TEXT = (
+    "You are an intent recognition system. "
     "Classify the intent of the target utterance into exactly one of these 30 categories:\n"
     "Acknowledge, Advise, Agree, Apologise, Arrange, Ask for help, Asking for opinions, "
     "Care, Comfort, Complain, Confirm, Criticize, Doubt, Emphasize, Explain, "
@@ -147,6 +157,7 @@ class Qwen3OmniTrainer:
         )
 
         self.best_eval_score = 0
+        self.system_prompt = SYSTEM_PROMPT_TEXT if args.modality == 'text' else SYSTEM_PROMPT_MULTIMODAL
 
     # ──── Prompt construction ────
 
@@ -169,8 +180,11 @@ class Qwen3OmniTrainer:
             f"What is the intent of the target utterance?"
         )
 
-        # 비디오 프레임 로드
-        video_frames = load_video_frames(target_utt['video_path'], self.args.num_video_frames)
+        # 비디오 프레임 로드 (텍스트 모드에서는 스킵)
+        if self.args.modality == 'text':
+            video_frames = None
+        else:
+            video_frames = load_video_frames(target_utt['video_path'], self.args.num_video_frames)
 
         content = []
         if video_frames is not None:
@@ -178,7 +192,7 @@ class Qwen3OmniTrainer:
         content.append({"type": "text", "text": user_text})
 
         messages = [
-            {"role": "system", "content": [{"type": "text", "text": SYSTEM_PROMPT}]},
+            {"role": "system", "content": [{"type": "text", "text": self.system_prompt}]},
             {"role": "user", "content": content},
         ]
         return messages, video_frames

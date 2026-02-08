@@ -2,12 +2,13 @@
 set -e
 
 # Qwen3-Omni + LoRA: MIntRec2.0 In-scope Intent Recognition
-# 텍스트 + 비디오 멀티모달, 생성형 분류
+# --modality: 'text' (텍스트 유니모달) | 'multimodal' (텍스트+비디오)
 
 export CUDA_VISIBLE_DEVICES=0
 export TOKENIZERS_PARALLELISM=false
 
 python run.py \
+    --modality 'text' \
     --text_data_path '../text_data' \
     --video_data_path '../video_data' \
     --model_name 'Qwen/Qwen3-Omni-30B-A3B-Thinking' \
