@@ -424,6 +424,65 @@ class Qwen3OmniTrainer:
         logger.debug(f'Parse failed: "{text}"')
         return -1
 
+    # ──── Preflight Check ────
+
+    def preflight_check(self, n_samples=2):
+        """학습 전에 test 파이프라인(generate → parse → metrics)을 샘플 몇 개로 검증한다."""
+        logger.info(f'[Preflight] Running sanity check with {n_samples} sample(s)...')
+        self.model.eval()
+
+        dataloader = self.dataloaders['test']
+        checked = 0
+
+        for batch in dataloader:
+            dialogue = batch[0]
+            utterances = dialogue['utterances']
+
+            for target_idx, utt in enumerate(utterances):
+                if utt['label_id'] == self.ood_label_id:
+                    continue
+
+                messages, video_frames = self._build_messages(utterances, target_idx)
+
+                text = self.processor.apply_chat_template(
+                    messages, tokenize=False, add_generation_prompt=True
+                )
+                inputs = self.processor(
+                    text=[text],
+                    videos=[video_frames] if video_frames is not None else None,
+                    return_tensors="pt",
+                    padding=True,
+                )
+                inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
+                with torch.no_grad():
+                    generated_ids = self.model.generate(
+                        **inputs,
+                        max_new_tokens=self.args.max_new_tokens,
+                        do_sample=False,
+                    )
+
+                prompt_len = int(inputs['attention_mask'][0].sum().item())
+                new_tokens = generated_ids[0, prompt_len:]
+                generated_text = self.processor.decode(
+                    new_tokens, skip_special_tokens=True
+                )
+
+                pred_id = self._parse_intent(generated_text)
+                label_name = self.id2label.get(utt['label_id'], '?')
+                pred_name = self.id2label.get(pred_id, generated_text) if pred_id != -1 else f'PARSE_FAIL("{generated_text}")'
+
+                logger.info(f'  [Preflight {checked+1}] true={label_name}, pred={pred_name}')
+
+                checked += 1
+                if checked >= n_samples:
+                    break
+            if checked >= n_samples:
+                break
+
+        self.model.train()
+        logger.info(f'[Preflight] Sanity check passed — test pipeline is working.')
+
     # ──── Testing ────
 
     def test(self):

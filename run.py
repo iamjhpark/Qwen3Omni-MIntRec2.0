@@ -60,8 +60,7 @@ def load_model_and_processor(args):
         args.model_name,
         torch_dtype=torch.bfloat16,
         device_map='auto',
-        attn_implementation='sdpa'
-        # attn_implementation='flash_attention_2',
+        attn_implementation='flash_attention_2',
     )
 
     logging.info('Applying LoRA...')
@@ -124,6 +123,10 @@ def main():
             num_train_inscope=num_train_inscope,
             ood_label_id=ood_label_id,
         )
+
+        # 학습 전 테스트 파이프라인 검증
+        if args_copy.train:
+            trainer.preflight_check(n_samples=2)
 
         # 학습
         if args_copy.train:
