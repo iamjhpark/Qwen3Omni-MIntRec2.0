@@ -409,9 +409,13 @@ class Qwen3OmniTrainer:
 
     @staticmethod
     def _strip_think(text):
-        """<think>...</think> 블록을 제거한다."""
+        """<think>...</think> 블록을 제거한다. 닫힘 태그 없이 잘린 경우도 처리."""
         import re
-        return re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+        # 완전한 <think>...</think> 블록 제거
+        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
+        # 닫힘 태그 없이 잘린 <think>... 도 제거
+        text = re.sub(r'<think>.*', '', text, flags=re.DOTALL)
+        return text.strip()
 
     def _parse_intent(self, generated_text):
         """생성된 텍스트에서 intent label을 파싱한다."""
