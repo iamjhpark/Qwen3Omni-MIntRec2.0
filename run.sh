@@ -9,8 +9,8 @@ export TOKENIZERS_PARALLELISM=false
 
 python run.py \
     --modality 'text' \
-    --text_data_path '../text_data' \
-    --video_data_path '../video_data' \
+    --text_data_path './text_data' \
+    --video_data_path './video_data' \
     --model_name 'Qwen/Qwen3-Omni-30B-A3B-Thinking' \
     --lora_r 16 \
     --lora_alpha 32 \
