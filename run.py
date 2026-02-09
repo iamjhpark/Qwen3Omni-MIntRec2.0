@@ -1,4 +1,30 @@
+# run.py (맨 위, 어떤 import보다 위에 두는 걸 권장)
 import os
+from pathlib import Path
+
+def configure_hf_cache(cache_root: str | None = None):
+    # 기본값: 레포 안쪽 큰 마운트 사용
+    if cache_root is None:
+        cache_root = "/home/work/Qwen3Omni-MIntRec2.0/_hf_cache"
+
+    p = Path(cache_root)
+    (p / "hub").mkdir(parents=True, exist_ok=True)
+    (p / "transformers").mkdir(parents=True, exist_ok=True)
+    (p / "datasets").mkdir(parents=True, exist_ok=True)
+    (p / "tmp").mkdir(parents=True, exist_ok=True)
+
+    os.environ["HF_HOME"] = str(p)
+    os.environ["HF_HUB_CACHE"] = str(p / "hub")
+    os.environ["TRANSFORMERS_CACHE"] = str(p / "transformers")
+    os.environ["HF_DATASETS_CACHE"] = str(p / "datasets")
+    os.environ["TMPDIR"] = str(p / "tmp")
+
+    # xet 비활성화 (xet_get 경로를 피하려고)
+    os.environ["HF_HUB_DISABLE_XET"] = "1"
+
+configure_hf_cache()
+
+
 import logging
 import warnings
 import datetime
@@ -58,8 +84,8 @@ def load_model_and_processor(args):
     logging.info(f'Loading model from {args.model_name}...')
     model = Qwen3OmniMoeThinkerForConditionalGeneration.from_pretrained(
         args.model_name,
-        torch_dtype=torch.bfloat16,
-        device_map='auto',
+        dtype="auto",
+        device_map="auto",
         attn_implementation='flash_attention_2',
     )
 
