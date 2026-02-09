@@ -11,11 +11,10 @@ python run.py \
     --modality 'text' \
     --text_data_path './text_data' \
     --video_data_path './video_data' \
-    --model_name 'Qwen/Qwen3-Omni-30B-A3B-Thinking' \
+    --model_name 'Qwen/Qwen3-Omni-30B-A3B-Instruct' \
     --lora_r 16 \
     --lora_alpha 32 \
     --lora_dropout 0.05 \
-    --train \
     --num_epochs 10 \
     --lr 1e-4 \
     --weight_decay 0.01 \
@@ -27,9 +26,9 @@ python run.py \
     --top_k_checkpoints 3 \
     --num_video_frames 8 \
     --context_len 1 \
-    --max_new_tokens 10 \
+    --max_new_tokens 256 \
     --output_dir 'outputs' \
     --results_file 'results.csv' \
     --save_model \
-    --seeds 0 1 2 3 4 \
+    --seeds 0 \
     --log_dir 'logs'

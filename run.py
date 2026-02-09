@@ -160,9 +160,13 @@ def main():
             trainer.train()
             logger.info('Training finished.')
 
-        # 테스트
+        # 테스트 (학습 안 했으면 저장된 LoRA 가중치 로드 시도, 없으면 zero-shot)
         if not args_copy.train:
-            trainer.load_lora_weights(seed_output_dir)
+            adapter_config = os.path.join(seed_output_dir, 'adapter_config.json')
+            if os.path.exists(adapter_config):
+                trainer.load_lora_weights(seed_output_dir)
+            else:
+                logger.info('No saved LoRA weights found — running zero-shot evaluation.')
 
         logger.info('Testing begins...')
         test_results = trainer.test()
