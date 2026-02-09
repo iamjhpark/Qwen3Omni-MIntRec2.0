@@ -342,6 +342,7 @@ class Qwen3OmniTrainer:
 
     def evaluate(self, split='dev', show_results=False):
         self.model.eval()
+        self.model.config.use_cache = True
 
         all_preds = []
         all_labels = []
@@ -360,7 +361,7 @@ class Qwen3OmniTrainer:
                 messages, video_frames = self._build_messages(utterances, target_idx)
 
                 text = self.processor.apply_chat_template(
-                    messages, tokenize=False, add_generation_prompt=True
+                    messages, tokenize=False, add_generation_prompt=True,
                 )
                 inputs = self.processor(
                     text=[text],
@@ -374,15 +375,15 @@ class Qwen3OmniTrainer:
                     generated_ids = self.model.generate(
                         **inputs,
                         max_new_tokens=self.args.max_new_tokens,
-                        do_sample=False,
                     )
 
-                # padding-safe: attention_mask 합으로 실제 입력 토큰 수 계산
-                prompt_len = int(inputs['attention_mask'][0].sum().item())
-                new_tokens = generated_ids[0, prompt_len:]
-                generated_text = self.processor.decode(
-                    new_tokens, skip_special_tokens=True
-                )
+                # 공식 문서: input_ids 길이 이후부터 디코딩
+                input_len = inputs['input_ids'].shape[1]
+                generated_text = self.processor.batch_decode(
+                    generated_ids[:, input_len:],
+                    skip_special_tokens=True,
+                    clean_up_tokenization_spaces=False,
+                )[0]
 
                 pred_id = self._parse_intent(generated_text)
                 if pred_id == -1:
@@ -402,12 +403,19 @@ class Qwen3OmniTrainer:
         results['y_pred'] = y_pred
         results['y_true'] = y_true
 
+        self.model.config.use_cache = False
         self.model.train()
         return results
 
+    @staticmethod
+    def _strip_think(text):
+        """<think>...</think> 블록을 제거한다."""
+        import re
+        return re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+
     def _parse_intent(self, generated_text):
         """생성된 텍스트에서 intent label을 파싱한다."""
-        text = generated_text.strip()
+        text = self._strip_think(generated_text).strip()
 
         if text in self.label2id:
             return self.label2id[text]
@@ -430,6 +438,7 @@ class Qwen3OmniTrainer:
         """학습 전에 test 파이프라인(generate → parse → metrics)을 샘플 몇 개로 검증한다."""
         logger.info(f'[Preflight] Running sanity check with {n_samples} sample(s)...')
         self.model.eval()
+        self.model.config.use_cache = True
 
         dataloader = self.dataloaders['test']
         checked = 0
@@ -445,7 +454,7 @@ class Qwen3OmniTrainer:
                 messages, video_frames = self._build_messages(utterances, target_idx)
 
                 text = self.processor.apply_chat_template(
-                    messages, tokenize=False, add_generation_prompt=True
+                    messages, tokenize=False, add_generation_prompt=True,
                 )
                 inputs = self.processor(
                     text=[text],
@@ -459,14 +468,14 @@ class Qwen3OmniTrainer:
                     generated_ids = self.model.generate(
                         **inputs,
                         max_new_tokens=self.args.max_new_tokens,
-                        do_sample=False,
                     )
 
-                prompt_len = int(inputs['attention_mask'][0].sum().item())
-                new_tokens = generated_ids[0, prompt_len:]
-                generated_text = self.processor.decode(
-                    new_tokens, skip_special_tokens=True
-                )
+                input_len = inputs['input_ids'].shape[1]
+                generated_text = self.processor.batch_decode(
+                    generated_ids[:, input_len:],
+                    skip_special_tokens=True,
+                    clean_up_tokenization_spaces=False,
+                )[0]
 
                 pred_id = self._parse_intent(generated_text)
                 label_name = self.id2label.get(utt['label_id'], '?')
@@ -480,6 +489,7 @@ class Qwen3OmniTrainer:
             if checked >= n_samples:
                 break
 
+        self.model.config.use_cache = False
         self.model.train()
         logger.info(f'[Preflight] Sanity check passed — test pipeline is working.')
 

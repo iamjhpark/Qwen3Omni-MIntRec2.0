@@ -84,8 +84,8 @@ def load_model_and_processor(args):
     logging.info(f'Loading model from {args.model_name}...')
     model = Qwen3OmniMoeThinkerForConditionalGeneration.from_pretrained(
         args.model_name,
-        torch_dtype=torch.bfloat16,
-        device_map='auto',
+        dtype="auto",
+        device_map="auto",
         attn_implementation='flash_attention_2',
     )
 
