@@ -17,6 +17,11 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description='Qwen3-Omni MIntRec2.0 In-scope Intent Recognition')
 
+    # Modality
+    parser.add_argument('--modality', type=str, default='multimodal',
+                        choices=['text', 'multimodal'],
+                        help='Input modality: text-only or multimodal (text+video)')
+
     # Data
     parser.add_argument('--text_data_path', type=str, default='../text_data',
                         help='Path to TSV files (train.tsv, dev.tsv, test.tsv)')

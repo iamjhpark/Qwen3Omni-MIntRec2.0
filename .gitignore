@@ -1,0 +1,9 @@
+./text_data
+
+./video_data
+
+*.csv
+
+*.tsv
+
+*.mp4
