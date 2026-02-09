@@ -29,7 +29,7 @@ def parse_args():
                         help='Path to video files (dia{id}_utt{id}.mp4)')
 
     # Model
-    parser.add_argument('--model_name', type=str, default='Qwen/Qwen3-Omni-30B-A3B-Thinking',
+    parser.add_argument('--model_name', type=str, default='Qwen/Qwen3-Omni-30B-A3B-Instruct',
                         help='HuggingFace model ID or local path')
 
     # LoRA
