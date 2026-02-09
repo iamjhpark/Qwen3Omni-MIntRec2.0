@@ -60,7 +60,8 @@ def load_model_and_processor(args):
         args.model_name,
         torch_dtype=torch.bfloat16,
         device_map='auto',
-        attn_implementation='flash_attention_2',
+        attn_implementation='sdpa'
+        # attn_implementation='flash_attention_2',
     )
 
     logging.info('Applying LoRA...')
