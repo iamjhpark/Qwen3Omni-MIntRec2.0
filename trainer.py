@@ -368,12 +368,14 @@ class Qwen3OmniTrainer:
                     enable_thinking=False,
                 )
 
+                _should_log = _logged_input_count < 5
+
                 # 처음 5개 샘플의 모델 입력 텍스트를 콘솔에 출력
-                if _logged_input_count < 5:
+                if _should_log:
                     _logged_input_count += 1
                     logger.info(
                         f"\n{'='*60}\n"
-                        f"[Model Input Text - Sample {_logged_input_count}/5]\n"
+                        f"[Model Input/Output - Sample {_logged_input_count}/5]\n"
                         f"{'='*60}\n"
                         f"{text}\n"
                         f"{'='*60}"
@@ -403,6 +405,15 @@ class Qwen3OmniTrainer:
                 )[0]
 
                 pred_id = self._parse_intent(generated_text)
+
+                if _should_log:
+                    label_name = self.id2label.get(utt['label_id'], '?')
+                    pred_name = self.id2label.get(pred_id, '?')
+                    logger.info(
+                        f"[Sample {_logged_input_count}/5] "
+                        f"Ground Truth: {label_name} | "
+                        f"Prediction: {pred_name} (raw: \"{generated_text}\")"
+                    )
                 if pred_id == -1:
                     parse_failures += 1
                     pred_id = 0
