@@ -347,6 +347,7 @@ class Qwen3OmniTrainer:
         all_preds = []
         all_labels = []
         parse_failures = 0
+        _logged_input_count = 0
 
         dataloader = self.dataloaders[split]
 
@@ -363,6 +364,18 @@ class Qwen3OmniTrainer:
                 text = self.processor.apply_chat_template(
                     messages, tokenize=False, add_generation_prompt=True,
                 )
+
+                # 처음 5개 샘플의 모델 입력 텍스트를 콘솔에 출력
+                if _logged_input_count < 5:
+                    _logged_input_count += 1
+                    logger.info(
+                        f"\n{'='*60}\n"
+                        f"[Model Input Text - Sample {_logged_input_count}/5]\n"
+                        f"{'='*60}\n"
+                        f"{text}\n"
+                        f"{'='*60}"
+                    )
+
                 inputs = self.processor(
                     text=[text],
                     videos=[video_frames] if video_frames is not None else None,
