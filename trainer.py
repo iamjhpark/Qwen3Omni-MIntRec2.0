@@ -393,7 +393,6 @@ class Qwen3OmniTrainer:
                     generated_ids = self.model.generate(
                         **inputs,
                         max_new_tokens=self.args.max_new_tokens,
-                        enable_thinking=False,
                     )
 
                 # 공식 문서: input_ids 길이 이후부터 디코딩
@@ -501,7 +500,6 @@ class Qwen3OmniTrainer:
                     generated_ids = self.model.generate(
                         **inputs,
                         max_new_tokens=self.args.max_new_tokens,
-                        enable_thinking=False,
                     )
 
                 input_len = inputs['input_ids'].shape[1]

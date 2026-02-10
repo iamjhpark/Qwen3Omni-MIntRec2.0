@@ -22,7 +22,7 @@ def configure_hf_cache(cache_root: str | None = None):
     # xet 비활성화 (xet_get 경로를 피하려고)
     os.environ["HF_HUB_DISABLE_XET"] = "1"
 
-configure_hf_cache()
+# configure_hf_cache()
 
 
 import logging
@@ -86,7 +86,7 @@ def load_model_and_processor(args):
         args.model_name,
         dtype="auto",
         device_map="auto",
-        attn_implementation='flash_attention_2',
+        attn_implementation='sdpa',
     )
 
     logging.info('Applying LoRA...')
@@ -167,6 +167,7 @@ def main():
                 trainer.load_lora_weights(seed_output_dir)
             else:
                 logger.info('No saved LoRA weights found — running zero-shot evaluation.')
+                trainer.model.disable_adapter_layers()
 
         logger.info('Testing begins...')
         test_results = trainer.test()

@@ -64,7 +64,7 @@ def parse_args():
                         help='Number of previous utterances as context')
 
     # Generation
-    parser.add_argument('--max_new_tokens', type=int, default=256)
+    parser.add_argument('--max_new_tokens', type=int, default=32)
 
     # Output
     parser.add_argument('--output_dir', type=str, default='outputs',
