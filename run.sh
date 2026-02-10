@@ -26,7 +26,7 @@ python run.py \
     --top_k_checkpoints 3 \
     --num_video_frames 8 \
     --context_len 1 \
-    --max_new_tokens 256 \
+    --max_new_tokens 32 \
     --output_dir 'outputs' \
     --results_file 'results.csv' \
     --save_model \

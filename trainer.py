@@ -299,7 +299,8 @@ class Qwen3OmniTrainer:
         try:
             # Fix C: 비디오를 포함하여 prompt 길이를 측정 (vision 토큰 확장 반영)
             prompt_text = self.processor.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
+                messages, tokenize=False, add_generation_prompt=True,
+                enable_thinking=False,
             )
             prompt_inputs = self.processor(
                 text=[prompt_text],
@@ -314,7 +315,8 @@ class Qwen3OmniTrainer:
                 {"role": "assistant", "content": [{"type": "text", "text": target_label_text}]}
             ]
             full_text = self.processor.apply_chat_template(
-                messages_with_answer, tokenize=False, add_generation_prompt=False
+                messages_with_answer, tokenize=False, add_generation_prompt=False,
+                enable_thinking=False,
             )
 
             inputs = self.processor(
@@ -363,6 +365,7 @@ class Qwen3OmniTrainer:
 
                 text = self.processor.apply_chat_template(
                     messages, tokenize=False, add_generation_prompt=True,
+                    enable_thinking=False,
                 )
 
                 # 처음 5개 샘플의 모델 입력 텍스트를 콘솔에 출력
@@ -388,6 +391,7 @@ class Qwen3OmniTrainer:
                     generated_ids = self.model.generate(
                         **inputs,
                         max_new_tokens=self.args.max_new_tokens,
+                        enable_thinking=False,
                     )
 
                 # 공식 문서: input_ids 길이 이후부터 디코딩
@@ -472,6 +476,7 @@ class Qwen3OmniTrainer:
 
                 text = self.processor.apply_chat_template(
                     messages, tokenize=False, add_generation_prompt=True,
+                    enable_thinking=False,
                 )
                 inputs = self.processor(
                     text=[text],
@@ -485,6 +490,7 @@ class Qwen3OmniTrainer:
                     generated_ids = self.model.generate(
                         **inputs,
                         max_new_tokens=self.args.max_new_tokens,
+                        enable_thinking=False,
                     )
 
                 input_len = inputs['input_ids'].shape[1]
