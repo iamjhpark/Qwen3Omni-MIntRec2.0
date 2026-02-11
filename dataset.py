@@ -30,11 +30,11 @@ class MIntRecDialogueDataset(Dataset):
         return self.dialogues[index]
 
 
-def load_video_frames(face_dir, num_frames=8):
+def load_video_frames(face_dir, num_frames=8, face_size=(224, 224)):
     """Face ROI 이미지 폴더에서 균등 간격으로 샘플링하여 PIL Image 리스트로 반환.
 
     이미지가 num_frames 이하이면 전부 사용한다.
-    해상도 제한은 processor의 min_pixels/max_pixels에서 통일 관리한다.
+    Face ROI는 크기가 제각각이므로 face_size로 통일한다.
     """
     if face_dir is None or not os.path.isdir(face_dir):
         return None
@@ -61,7 +61,7 @@ def load_video_frames(face_dir, num_frames=8):
     for idx in indices:
         img_path = os.path.join(face_dir, image_files[idx])
         try:
-            frames.append(Image.open(img_path).convert('RGB'))
+            frames.append(Image.open(img_path).convert('RGB').resize(face_size))
         except Exception as e:
             logger.warning(f'Failed to load image {img_path}: {e}')
 
