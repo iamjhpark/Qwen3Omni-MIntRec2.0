@@ -2,8 +2,16 @@
 
 ./video_data
 
-*.csv
+# *.csv
 
 *.tsv
 
 *.mp4
+
+*.log
+
+.DS_Store
+
+._.DS_Store
+
+*.pyc

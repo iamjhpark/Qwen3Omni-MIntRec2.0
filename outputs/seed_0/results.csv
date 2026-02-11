@@ -1,0 +1,2 @@
+acc,f1,weighted_f1,precision,recall,eval_acc,model,lora_r,context_len,seed,timestamp
+45.65,45.24,45.24,51.8,45.65,0,Qwen/Qwen3-Omni-30B-A3B-Instruct,16,1,0,2026-02-11 03:40:33
