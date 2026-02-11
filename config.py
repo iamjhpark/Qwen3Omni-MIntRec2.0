@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--text_data_path', type=str, default='../text_data',
                         help='Path to TSV files (train.tsv, dev.tsv, test.tsv)')
     parser.add_argument('--video_data_path', type=str, default='../video_data',
-                        help='Path to video files (dia{id}_utt{id}.mp4)')
+                        help='Path to face ROI image folders (dia{id}_utt{id}/)')
 
     # Model
     parser.add_argument('--model_name', type=str, default='Qwen/Qwen3-Omni-30B-A3B-Instruct',

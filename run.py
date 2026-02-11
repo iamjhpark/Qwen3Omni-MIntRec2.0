@@ -109,6 +109,7 @@ def load_model_and_processor(args):
     # gradient checkpointing과 use_cache=True는 충돌하므로 반드시 끈다
     model.config.use_cache = False
     model.gradient_checkpointing_enable()
+    model.enable_input_require_grads()
 
     return model, processor
 
@@ -167,6 +168,7 @@ def main():
                 trainer.load_lora_weights(seed_output_dir)
             else:
                 logger.info('No saved LoRA weights found — running zero-shot evaluation.')
+                trainer.model.disable_adapter_layers()
 
         logger.info('Testing begins...')
         test_results = trainer.test()

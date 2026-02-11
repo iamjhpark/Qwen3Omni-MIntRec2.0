@@ -31,4 +31,5 @@ python run.py \
     --results_file 'results.csv' \
     --save_model \
     --seeds 0 \
+    --train \
     --log_dir 'logs'

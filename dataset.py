@@ -1,8 +1,8 @@
 import os
+import re
 import csv
 import logging
 import numpy as np
-import cv2
 
 from collections import OrderedDict
 from torch.utils.data import Dataset, DataLoader
@@ -30,29 +30,40 @@ class MIntRecDialogueDataset(Dataset):
         return self.dialogues[index]
 
 
-def load_video_frames(video_path, num_frames=8):
-    """비디오에서 균등 간격으로 프레임을 샘플링하여 PIL Image 리스트로 반환.
+def load_video_frames(face_dir, num_frames=8):
+    """Face ROI 이미지 폴더에서 균등 간격으로 샘플링하여 PIL Image 리스트로 반환.
 
+    이미지가 num_frames 이하이면 전부 사용한다.
     해상도 제한은 processor의 min_pixels/max_pixels에서 통일 관리한다.
     """
-    if video_path is None or not os.path.exists(video_path):
+    if face_dir is None or not os.path.isdir(face_dir):
         return None
 
-    cap = cv2.VideoCapture(video_path)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    if total_frames <= 0:
-        cap.release()
+    def _frame_sort_key(filename):
+        """파일명에서 프레임 번호를 추출하여 숫자 기준으로 정렬."""
+        m = re.search(r'_(\d+)_sim', filename)
+        return int(m.group(1)) if m else 0
+
+    image_files = sorted(
+        (f for f in os.listdir(face_dir)
+         if f.lower().endswith(('.jpg', '.jpeg', '.png'))),
+        key=_frame_sort_key,
+    )
+    if len(image_files) == 0:
         return None
 
-    indices = np.linspace(0, total_frames - 1, num_frames, dtype=int)
+    if len(image_files) <= num_frames:
+        indices = list(range(len(image_files)))
+    else:
+        indices = np.linspace(0, len(image_files) - 1, num_frames, dtype=int).tolist()
+
     frames = []
     for idx in indices:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-        ret, frame = cap.read()
-        if ret:
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frames.append(Image.fromarray(frame_rgb))
-    cap.release()
+        img_path = os.path.join(face_dir, image_files[idx])
+        try:
+            frames.append(Image.open(img_path).convert('RGB'))
+        except Exception as e:
+            logger.warning(f'Failed to load image {img_path}: {e}')
 
     return frames if len(frames) > 0 else None
 
@@ -79,8 +90,8 @@ def read_dialogues(tsv_path, label_map, video_base_path):
 
             label_id = label_map.get(label, label_map.get(OOD_LABEL, -1))
 
-            video_filename = f'dia{dia_id}_utt{utt_id}.mp4'
-            video_path = os.path.join(video_base_path, video_filename)
+            face_dir_name = f'dia{dia_id}_utt{utt_id}'
+            video_path = os.path.join(video_base_path, face_dir_name)
 
             if dia_id not in dialogues_dict:
                 dialogues_dict[dia_id] = []
@@ -99,7 +110,7 @@ def read_dialogues(tsv_path, label_map, video_base_path):
     for dia_id, utterances in dialogues_dict.items():
         utterances.sort(key=lambda u: int(u['utterance_id']))
         for utt in utterances:
-            if not os.path.exists(utt['video_path']):
+            if not os.path.isdir(utt['video_path']):
                 missing_videos += 1
                 utt['video_path'] = None
         dialogues.append({
