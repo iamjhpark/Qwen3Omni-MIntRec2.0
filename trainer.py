@@ -374,9 +374,18 @@ class Qwen3OmniTrainer:
                 # 처음 5개 샘플의 모델 입력 텍스트를 콘솔에 출력
                 if _should_log:
                     _logged_input_count += 1
+                    if video_frames is not None:
+                        frame_info = (
+                            f"  Frames: {len(video_frames)}장, "
+                            f"Size: {video_frames[0].size}, "
+                            f"Face dir: {utt['video_path']}"
+                        )
+                    else:
+                        frame_info = "  Frames: None (text-only)"
                     logger.info(
                         f"\n{'='*60}\n"
                         f"[Model Input/Output - Sample {_logged_input_count}/5]\n"
+                        f"[Video] {frame_info}\n"
                         f"{'='*60}\n"
                         f"{text}\n"
                         f"{'='*60}"
