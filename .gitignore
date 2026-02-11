@@ -2,7 +2,7 @@
 
 ./video_data
 
-*.csv
+# *.csv
 
 *.tsv
 
